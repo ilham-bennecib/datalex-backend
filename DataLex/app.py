@@ -4,8 +4,13 @@ from mongoengine import connect, Document, StringField, ListField
 app = Flask(__name__)
 
 # --- CONFIGURATION CLUSTER ---
-# Ici, on se connecte au cluster. Si un noeud tombe, le driver gère le basculement.
-connect(db="datalex", host="mongodb://localhost:27017/datalex")
+# On donne l'adresse du primaire et du secondaire. 
+# Le paramètre replicaSet="rs0" permet de savoir qui est le chef.
+# On définit l'URI qui pointe vers tes deux containers Docker
+uri = "mongodb://localhost:27017,localhost:27018/datalex?replicaSet=rs0"
+
+# On connecte MongoEngine à notre Replica Set
+connect(host=uri)
 
 # --- COUCHE DOMAINE (Modèle DDD) ---
 class Terme(Document):

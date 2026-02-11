@@ -1,0 +1,25 @@
+services:
+  mongo-primary:
+    image: mongo:latest
+    container_name: mongo-primary
+    hostname: mongo-primary
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data-primary:/data/db
+    command: mongod --replSet rs0 --bind_ip_all
+
+  mongo-secondary:
+    image: mongo:latest
+    container_name: mongo-secondary
+    hostname: mongo-secondary
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data-secondary:/data/db
+    command: mongod --replSet rs0 --bind_ip_all
+
+
+volumes:
+  mongo-data-primary:
+  mongo-data-secondary:
