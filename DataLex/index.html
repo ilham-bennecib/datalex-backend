@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>DataLex - Glossaire Haute Disponibilité</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; line-height: 1.6; }
+        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 2px 2px 5px #eee; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        hr { margin: 30px 0; }
+        .tag { background: #e0e0e0; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>📚 DataLex : Glossaire Technique</h1>
+    
+    <div class="card">
+        <h3>Ajouter un nouveau terme</h3>
+        <input type="text" id="tech" placeholder="Nom technique (ex: REPL_SET)">
+        <input type="text" id="metier" placeholder="Nom métier (ex: Groupe de réplication)">
+        <input type="text" id="def" placeholder="Définition">
+        <button onclick="ajouterTerme()">Enregistrer dans le Cluster</button>
+    </div>
+
+    <hr>
+
+    <h3>Rechercher un terme</h3>
+    <input type="text" id="searchQuery" onkeyup="chercherTerme()" placeholder="Tapez votre recherche ici...">
+    
+    <div id="resultats"></div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:5000/api";
+
+        // FONCTION POUR AJOUTER
+        async function ajouterTerme() {
+            const data = {
+                nom_technique: document.getElementById('tech').value,
+                nom_metier: document.getElementById('metier').value,
+                definition: document.getElementById('def').value
+            };
+
+            const response = await fetch(`${API_URL}/termes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert("Terme ajouté avec succès !");
+                location.reload(); // Rafraîchit pour vider les champs
+            }
+        }
+
+        // FONCTION POUR CHERCHER
+        async function chercherTerme() {
+            const q = document.getElementById('searchQuery').value;
+            const response = await fetch(`${API_URL}/search?q=${q}`);
+            const termes = await response.json();
+
+            const div = document.getElementById('resultats');
+            div.innerHTML = ""; // On vide avant d'afficher
+
+            termes.forEach(t => {
+                div.innerHTML += `
+                    <div class="card">
+                        <strong>${t.nom_metier}</strong> (<i>${t.nom_technique}</i>)
+                        <p>${t.definition || 'Pas de définition'}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Charger tout au début
+        chercherTerme();
+    </script>
+</body>
+</html>

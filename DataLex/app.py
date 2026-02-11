@@ -1,47 +1,63 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from mongoengine import connect, Document, StringField, ListField
+import json
 
 app = Flask(__name__)
 
-# --- CONFIGURATION CLUSTER ---
-# On donne l'adresse du primaire et du secondaire. 
-# Le paramètre replicaSet="rs0" permet de savoir qui est le chef.
-# On définit l'URI qui pointe vers tes deux containers Docker
-uri = "mongodb://localhost:27017,localhost:27018/datalex?replicaSet=rs0"
+# --- 1. CONFIGURATION DE LA SÉCURITÉ (CORS) ---
+# On autorise le Front-end (même s'il vient d'un fichier local) à parler à l'API
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# On connecte MongoEngine à notre Replica Set
-connect(host=uri)
-
-# --- COUCHE DOMAINE (Modèle DDD) ---
+# --- 2. CONNEXION À LA BASE DE DONNÉES ---
+# On utilise l'IP locale 127.0.0.1 (localhost).
+# Le timeout est court (2s) pour éviter que l'API ne freeze si la BDD est éteinte.
+try:
+    connect(
+        db="datalex",
+        host="mongodb://127.0.0.1:27017/datalex",
+        serverSelectionTimeoutMS=5000
+    )
+    print("✅ Connecté au port 27017 (Mapping Docker)")
+except Exception as e:
+    print(f"❌ Erreur : {e}")
+# --- 3. MODÈLE DE DONNÉES (DOMAINE) ---
 class Terme(Document):
-    """ Agrégat principal du domaine Glossaire """
     nom_technique = StringField(required=True, unique=True)
     nom_metier = StringField(required=True)
     definition = StringField()
     source = StringField()
     tags = ListField(StringField())
 
-# --- COUCHE BUSINESS (Logique métier simple) ---
-class GlossaireService:
-    def rechercher_terme(self, query):
-        # KISS : Recherche simple sur deux champs
-        return Terme.objects(nom_technique__icontains=query) or Terme.objects(nom_metier__icontains=query)
+# --- 4. ROUTES DE L'API (PRÉSENTATION) ---
 
-service = GlossaireService()
-
-# --- COUCHE PRÉSENTATION (API) ---
 @app.route('/api/termes', methods=['POST'])
 def ajouter_terme():
-    data = request.json
-    nouveau = Terme(**data).save()
-    # On utilise .to_json() pour convertir l'objet MongoDB en texte JSON
-    return nouveau.to_json(), 201, {'Content-Type': 'application/json'}
+    try:
+        data = request.json
+        # On crée et on sauvegarde le document dans MongoDB
+        nouveau = Terme(**data).save()
+        return nouveau.to_json(), 201, {'Content-Type': 'application/json'}
+    except Exception as e:
+        print(f"Erreur lors de l'ajout : {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/search', methods=['GET'])
 def chercher():
-    q = request.args.get('q', '')
-    resultats = Terme.objects(nom_technique__icontains=q) # Ou ta logique de service
-    return resultats.to_json(), 200, {'Content-Type': 'application/json'}
+    try:
+        q = request.args.get('q', '')
+        # Recherche insensible à la casse (icontains) sur le nom technique ou métier
+        if q:
+            resultats = Terme.objects(nom_technique__icontains=q) or Terme.objects(nom_metier__icontains=q)
+        else:
+            resultats = Terme.objects.all()
+            
+        return resultats.to_json(), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        print(f"Erreur lors de la recherche : {e}")
+        return jsonify({"error": str(e)}), 500
 
+# --- 5. LANCEMENT DU SERVEUR ---
 if __name__ == "__main__":
+    # Debug=True permet de voir les erreurs en direct et de relancer auto le serveur
     app.run(debug=True, port=5000)
