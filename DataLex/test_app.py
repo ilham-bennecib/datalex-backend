@@ -27,7 +27,7 @@ def test_terme_format_tags():
 def test_api_create_terme(client):
     """Vérifie que la route POST fonctionne et répond 201"""
     payload = {
-        "nom_technique": "TEST_AUTO_01",
+        "nom_technique": "TEST_AUTO_03",
         "nom_metier": "Test Automatisé",
         "definition": "Ceci est un test",
         "source": "Pytest"
@@ -36,7 +36,7 @@ def test_api_create_terme(client):
                            data=json.dumps(payload),
                            content_type='application/json')
     assert response.status_code == 201
-    assert b"TEST_AUTO_01" in response.data
+    assert b"TEST_AUTO_03" in response.data
 
 def test_api_search_terme(client):
     """Vérifie que la recherche renvoie bien des résultats"""
