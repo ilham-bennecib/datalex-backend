@@ -11,7 +11,7 @@ Ce projet met en œuvre des principes d'ingénierie logicielle avancés :
 
 ## Stack Technique
 - **Backend** : Python 3 + Flask
-- **Base de données** : Cluster MongoDB (1 Primary + 2 Replicas)
+- **Base de données** : Cluster MongoDB (1 Primary + 1 Replica)
 - **Conteneurisation** : Docker Compose
 
 ## Installation et Utilisation (Livrable 6)
