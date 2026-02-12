@@ -58,22 +58,45 @@ def chercher():
         print(f"Erreur lors de la recherche : {e}")
         return jsonify({"error": str(e)}), 500
 
-
-@app.route('/db/status', methods=['GET'])
-def db_status():
-    # Ce endpoint prouve quelle machine répond
-    return jsonify({
-        "status": "connected",
-        "db_host": socket.gethostname(), 
-        "server_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "replica_set": "rs0"
-    })
+# --- Tests ---
 
 @app.route('/db/read-test', methods=['GET'])
 def read_test():
-    # Force une lecture pour prouver que le replica fonctionne
-    count = Terme.objects.count()
-    return jsonify({"count": count, "source": "replica_set_query"})
+    """Route demandée par le TP pour prouver la lecture sur replica"""
+    try:
+        # On compte les termes pour forcer une lecture
+        count = Terme.objects.count()
+        return jsonify({
+            "count": count, 
+            "source": "replica_set_query", # Ce texte est attendu par le test
+            "status": "success"
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/db/write-test', methods=['POST'])
+def write_test():
+    """Route demandée par le TP pour prouver l'écriture sur primary"""
+    try:
+        # On crée un terme de test technique
+        test_terme = Terme(
+            nom_technique=f"DIAG_WRITE_{datetime.datetime.now().timestamp()}",
+            nom_metier="Test Diagnostic",
+            definition="Test d'écriture pour le rapport"
+        ).save()
+        return jsonify({"status": "write_ok", "id": str(test_terme.id)}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/db/status', methods=['GET'])
+def db_status():
+    """Affiche les infos de la machine qui répond (Livrable 4)"""
+    import socket
+    return jsonify({
+        "db_role": "cluster_member",
+        "host_responding": socket.gethostname(),
+        "timestamp": datetime.datetime.now().isoformat()
+    }), 200
 
 # --- 5. LANCEMENT DU SERVEUR ---
 if __name__ == "__main__":

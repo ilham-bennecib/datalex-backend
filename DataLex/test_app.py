@@ -8,7 +8,7 @@ def client():
     with app.test_client() as client:
         yield client
 
-# --- 1. TESTS UNITAIRES (Validation du modèle) ---
+# --- 1. TESTS UNITAIRES  ---
 
 def test_terme_model_validation():
     """Vérifie qu'on ne peut pas créer un terme sans nom technique (S de SOLID)"""
@@ -22,7 +22,7 @@ def test_terme_format_tags():
     assert len(terme.tags) == 2
     assert "finance" in terme.tags
 
-# --- 2. TESTS D'INTÉGRATION (Validation de l'API) ---
+# --- 2. TESTS D'INTÉGRATION  ---
 
 def test_api_create_terme(client):
     """Vérifie que la route POST fonctionne et répond 201"""
@@ -45,7 +45,7 @@ def test_api_search_terme(client):
     data = json.loads(response.data)
     assert isinstance(data, list)
 
-# --- 3. TEST DE PREUVE RÉPLICA (Livrable 5.3) ---
+# --- 3. TEST DE PREUVE RÉPLICA  ---
 
 def test_replica_read_diagnostic(client):
     """Prouve que la route de diagnostic de lecture fonctionne"""
