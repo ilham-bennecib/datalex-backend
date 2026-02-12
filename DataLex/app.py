@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from mongoengine import connect, Document, StringField, ListField
 import json
+import socket, datetime
 
 app = Flask(__name__)
 
@@ -56,6 +57,23 @@ def chercher():
     except Exception as e:
         print(f"Erreur lors de la recherche : {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/db/status', methods=['GET'])
+def db_status():
+    # Ce endpoint prouve quelle machine répond
+    return jsonify({
+        "status": "connected",
+        "db_host": socket.gethostname(), 
+        "server_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "replica_set": "rs0"
+    })
+
+@app.route('/db/read-test', methods=['GET'])
+def read_test():
+    # Force une lecture pour prouver que le replica fonctionne
+    count = Terme.objects.count()
+    return jsonify({"count": count, "source": "replica_set_query"})
 
 # --- 5. LANCEMENT DU SERVEUR ---
 if __name__ == "__main__":
