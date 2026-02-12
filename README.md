@@ -27,7 +27,7 @@ Ce projet met en œuvre des principes d'ingénierie logicielle avancés :
 - **Tester l'écriture primary** : `POST /db/write-test`
 
 ## Preuves Techniques (Livrable 7)
-- **Réplication** : Les données insérées sur le Primary sont automatiquement copiées sur les deux Replicas.
+- **Réplication** : Les données insérées sur le Primary sont automatiquement copiées sur le Replica.
 - **Failover** : En cas d'arrêt du Primary (`docker stop mongo-primary`), le cluster élit un nouveau chef automatiquement, garantissant la disponibilité du service.
 
 ## Exemple de requête (Recherche)
